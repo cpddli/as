@@ -71,7 +71,7 @@ TG_API_BASE    = "https://tg.250887.xyz"
 if CF_SCANNER.is_file():
     CF_SCANNER.chmod(0o755)
 
-# ── 安全输入辅助函数 (解决提示词重复输出问题) ──
+# ── 安全输入辅助函数 ──
 def safe_input(prompt_text):
     print(prompt_text, end='', flush=True)
     try:
@@ -96,10 +96,10 @@ def load_tg_config():
     return {"enabled": False, "token": "", "chat_id": ""}
 
 def check_or_init_tg_config():
-    """是否绑定 TG Bot，按回车可跳过"""
+    """首次运行时提示绑定 TG Bot，按回车可跳过"""
     if not TG_CONFIG_FILE.exists():
         print("  [Telegram Bot 设置]")
-        choice = safe_input("  是否绑定 Telegram Bot？(y/N，按回车跳过不绑定): ").lower()
+        choice = safe_input("  首次运行，是否绑定 Telegram Bot？(y/N，按回车跳过不绑定): ").lower()
         if choice == "y":
             token = safe_input("  请输入 TG Bot Token: ")
             chat_id = safe_input("  请输入 TG Chat ID: ")
@@ -660,7 +660,6 @@ if __name__ == "__main__":
         raw = safe_input("  输入 ASN 编号 (多个用逗号分隔): ")
         if not raw:
             print("用法: python3 run.py AS209242")
-            print("  ssh 断线不杀: screen -S scan → python3 run.py AS209242 → Ctrl+A D")
             sys.exit(1)
         asns = [a.strip().replace("AS", "").replace("as", "") for a in raw.replace("，", ",").split(",") if a.strip()]
     else:
@@ -677,7 +676,6 @@ if __name__ == "__main__":
         asns = [a.strip().replace("AS", "").replace("as", "") for a in raw.replace("，", ",").split(",") if a.strip()]
         if not asns:
             print("用法: python3 run.py AS209242 或 python3 run.py AS209242 -p 8443")
-            print("  ssh 断线不杀: screen -S scan → python3 run.py AS209242 → Ctrl+A D")
             sys.exit(1)
     
     pps_input = safe_input("  设置 masscan 扫描速率 PPS (回车默认 1000): ")
@@ -736,8 +734,4 @@ if __name__ == "__main__":
         if tg_send_choice == "y":
             send_tg_document(result_csv_path, caption=f"Cloudflare 节点扫描结果: {Path(result_csv_path).name}")
 
-    print()
-    print("  ───")
-    print("  SSH 断线不杀: screen -S scan → python3 run.py AS209242 → Ctrl+A D")
-    print("  恢复: screen -r scan")
     print("\n✓ 完成\n")
