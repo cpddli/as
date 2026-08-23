@@ -29,25 +29,6 @@ cmtjd AS209242,AS3214     # 多个 ASN（逗号分隔）
 cmtjd AS209242 AS3214     # 多个 ASN（空格分隔）
 ```
 
-### 后台运行（SSH 断线不杀）
-
-长扫描（5-30分钟），担心 SSH 断线可以用 `screen`：
-
-```bash
-# 安装 screen（仅首次）
-apt install -y screen
-
-# 启动 screen 会话
-screen -S scan
-
-# 在里面正常跑 cmtjd AS209242
-# 按 Ctrl+A 再按 D 断开（进程继续跑）
-```
-
-下次 SSH 连回来，`screen -r scan` 即可恢复查看。
-
-> 如果记不清会话名，`screen -ls` 列出所有会话。
-
 ### 交互模式
 
 不带参数运行，进入交互提示：
@@ -121,8 +102,6 @@ masscan 依赖 **raw socket**（CAP_NET_RAW），以下环境有限制：
 - ⚠️ WSL2 需切换为 NAT 网络模式（默认桥接不支持 raw socket）
 
 > 换到 KVM VPS 或物理机即可正常使用。
-
----
 
 
 ## 鸣谢
