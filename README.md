@@ -10,6 +10,11 @@
 ```bash
 curl -fsSL https://github.250887.xyz/https://raw.githubusercontent.com/cpddli/ASNIPtest/main/install.sh | bash
 ```
+## 更新
+
+```bash
+cmtjd update
+```
 
 ## 卸载
 
