@@ -1,9 +1,3 @@
-# ASNIPtest
-
-从 **ASN 编号** 出发，自动完成 IP 段拉取 → 端口扫描 → Cloudflare 反代节点检测，输出可用 CF 节点 CSV。
-
----
-
 ## 快速开始
 
 **Linux / macOS**
