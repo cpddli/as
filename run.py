@@ -129,9 +129,10 @@ def send_tg_document(file_path, caption=""):
 def ensure_local_mmdb():
     """检查本地数据库，若无或过期则自动下载最新月度版"""
     now = datetime.now()
-    # 尝试当前月和上个月（DB-IP月初更新可能有几天的延迟）
+    # 尝试当前月和上个月
     for i in range(2):
-        target_date = now - timedelta(days=30 * i)
+        # 针对 DB-IP 发布的月份格式调整
+        target_date = now - timedelta(days=28 * i)
         ym_str = target_date.strftime("%Y-%m")
         filename = f"dbip-country-lite-{ym_str}.mmdb"
         mmdb_path = BASE / filename
@@ -147,10 +148,10 @@ def ensure_local_mmdb():
         url = f"https://download.db-ip.com/free/{filename}.gz"
         gz_path = BASE / f"{filename}.gz"
 
-        print(f"  正在下载 {ym_str} 版离线 GeoIP 数据库 (约 8MB)...")
+        print(f"  正在下载 {ym_str} 版离线 GeoIP 数据库 (约 10MB)...")
         try:
             req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req, timeout=15) as resp, open(gz_path, 'wb') as out_file:
+            with urllib.request.urlopen(req, timeout=30) as resp, open(gz_path, 'wb') as out_file:
                 shutil.copyfileobj(resp, out_file)
 
             print("  解压中...")
@@ -219,19 +220,26 @@ def fetch_prefixes(asns):
 
     print("\n" + "─" * 45)
     print(" 请选择 CIDR 范围模式：")
-    print("  [1] 精准模式：本地离线 mmdb 秒级提取 HK 节点 (推荐)")
+    print("  [1] 精准模式：本地离线 mmdb 秒级提取指定地区节点 (推荐)")
     print("  [2] 默认模式：保留全部 CIDR")
     print("─" * 45)
     
     choice = safe_input(" 请选择 (1/2，直接回车默认为 2): ").strip()
 
     if choice == "1":
+        # 🌟 允许用户自由指定地区代码 🌟
+        target_regions_input = safe_input(" 请输入要匹配的地区代码 (如 hk 或 jp,sg，按回车默认为 hk): ").strip().upper()
+        if not target_regions_input:
+            target_regions = {"HK"}
+        else:
+            target_regions = {r.strip() for r in target_regions_input.replace("，", ",").split(",") if r.strip()}
+
         mmdb_path = ensure_local_mmdb()
         if not mmdb_path:
             cidrs = [str(net) for net in merged_nets]
         else:
-            print("\n  正在通过本地内存检索 HK 节点... (无需网络等待)")
-            hk_nets = []
+            print(f"\n  正在通过本地内存检索属于 {','.join(target_regions)} 的节点... (无需网络等待)")
+            matched_nets = []
             
             with maxminddb.open_database(str(mmdb_path)) as reader:
                 for net in granular_nets:
@@ -239,17 +247,17 @@ def fetch_prefixes(asns):
                     try:
                         res = reader.get(test_ip)
                         country = res.get("country", {}).get("iso_code", "") if res else ""
-                        if country == "HK":
-                            hk_nets.append(net)
+                        if country in target_regions:
+                            matched_nets.append(net)
                     except Exception:
                         pass
             
-            if hk_nets:
-                hk_nets = list(ipaddress.collapse_addresses(hk_nets))
-                cidrs = [str(net) for net in hk_nets]
-                print(f"  ✅ 本地筛查完毕，提取出纯正 HK CIDR: {len(cidrs)} 个")
+            if matched_nets:
+                matched_nets = list(ipaddress.collapse_addresses(matched_nets))
+                cidrs = [str(net) for net in matched_nets]
+                print(f"  ✅ 本地筛查完毕，提取出纯正 {','.join(target_regions)} CIDR: {len(cidrs)} 个")
             else:
-                print("  ⚠️ 未检测到 HK CIDR，恢复使用全部 CIDR")
+                print(f"  ⚠️ 未检测到 {','.join(target_regions)} CIDR，恢复使用全部 CIDR")
                 cidrs = [str(net) for net in merged_nets]
     else:
         print("\n  已跳过精筛，使用全部 CIDR")
