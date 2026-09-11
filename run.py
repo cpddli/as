@@ -10,11 +10,27 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-try:
-    import maxminddb
-except ImportError:
-    print("❌ 缺少本地离线数据库解析依赖，请先在终端运行: pip3 install maxminddb")
-    sys.exit(1)
+# ── 🌟 自动检查与修复 Apt 依赖 🌟 ──
+def install_apt_deps():
+    """检测并自动安装 python3-maxminddb 依赖"""
+    try:
+        import maxminddb
+    except ImportError:
+        print("  ⚠️ 检测到缺少 maxminddb 依赖，正在尝试通过 apt 自动安装...")
+        sudo = [] if os.geteuid() == 0 else ["sudo"]
+        try:
+            # 刷新 apt 并静默安装 python3-maxminddb
+            subprocess.run(sudo + ["apt-get", "update", "-qq"], check=True)
+            subprocess.run(sudo + ["apt-get", "install", "-y", "-qq", "python3-maxminddb"], check=True)
+            print("  ✅ maxminddb 依赖安装成功！\n")
+        except Exception as e:
+            print(f"  ❌ 自动安装依赖失败: {e}")
+            print("  请手动运行: sudo apt update && sudo apt install -y python3-maxminddb")
+            sys.exit(1)
+
+# 执行依赖检测
+install_apt_deps()
+import maxminddb
 
 # ── 🌟 核心配置 🌟 ──
 MASSCAN_RATE = 1000
