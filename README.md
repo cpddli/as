@@ -2,7 +2,7 @@
 
 **Linux / macOS**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cpddli/ASNIPtest/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/cpddli/as/main/install.sh | bash
 ```
 ## 更新
 
